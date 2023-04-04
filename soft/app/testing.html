@@ -1,0 +1,56 @@
+<script type="text/javascript">
+    function calroom() {
+        //var nights = parseInt(document.getElementById("nights").value);
+        var date1 = new Date(document.getElementById("checkin_date").value);
+        var date2 = new Date(document.getElementById("checkout_date").value);
+        //var room_price = document.getElementById("room_price").value;
+
+
+        // To calculate the time difference of two dates
+        var Difference_In_Time = date2.getTime() - date1.getTime();
+
+
+        // To calculate the no. of days between two dates
+        var Difference_In_Days = Difference_In_Time / (1000 * 3600 * 24);
+
+        var nights = parseInt(Difference_In_Days);
+        //var totalamount = (room_price * nights).toFixed(2);
+
+        document.getElementById("nights").value = nights;
+        //document.getElementById("amountpayable").value = totalamount;
+    }
+</script>
+
+<div class="form-group col-lg-6">
+    <label>Checkin Date *</label>
+    <div class="select-box">
+        <i class='bx bx-calendar'></i>
+        <div class="input-group date">
+            <input type="date" name="checkin_date" id="checkin_date" onchange="calroom()" class="form-control" placeholder="Check-In Date" required>
+            <span class="input-group-addon">
+                                                                <i class="glyphicon glyphicon-th"></i>
+                                                            </span>
+        </div>
+    </div>
+</div>
+
+<div class="form-group col-lg-6">
+    <label>Checkout Date *</label>
+    <div class="select-box">
+        <i class='bx bx-calendar'></i>
+        <div class="input-group date">
+            <input type="date" name="checkout_date" id="checkout_date" onchange="calroom()" class="form-control" placeholder="Check-Out Date" required>
+            <span class="input-group-addon">
+                                                                <i class="glyphicon glyphicon-th"></i>
+                                                            </span>
+        </div>
+    </div>
+</div>
+
+<div class="form-group col-lg-6">
+    <label>No of Night(s) *</label>
+    <div class="select-box">
+        <i class='bx bx-group'></i>
+        <input type="number" name="nights" id="nights" onkeyup="calroom()" required readonly class="form-control">
+    </div>
+</div>

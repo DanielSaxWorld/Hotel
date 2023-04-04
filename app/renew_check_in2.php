@@ -1,0 +1,590 @@
+<?php
+include('session_reception.php');
+include('db_conn.php');
+$id = 1;
+$sql="SELECT * FROM staff_id WHERE id='$id'";
+$result=mysqli_query($conn,$sql)or die(mysqli_error($conn));
+$rows=mysqli_fetch_array($result);
+?>
+
+
+ <?php
+// include('db_conn.php');
+// if(isset($_REQUEST['uin'])){
+// $sql = "SELECT * FROM guest WHERE uin='$_REQUEST[uin]'";
+// $result = mysqli_query($conn, $sql);
+// $row=mysqli_fetch_array($result);
+// //$_REQUEST['fileno']=$row['fileno'];
+?>
+
+<?php
+include('db_conn.php');
+if(isset($_REQUEST['lodge_id'])){
+$sql6 = "SELECT * FROM check_in WHERE lodge_id='$_REQUEST[lodge_id]'";
+$result = mysqli_query($conn, $sql6);
+$row=mysqli_fetch_array($result);
+
+        $oldlodge_id =$row['lodge_id'];
+
+?>
+
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title><?php echo $row['fullname'];?> | Check In</title>
+
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="font-awesome/css/font-awesome.css" rel="stylesheet">
+    <link href="css/plugins/iCheck/custom.css" rel="stylesheet">
+    <link href="css/plugins/steps/jquery.steps.css" rel="stylesheet">
+    <link href="css/animate.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <link href="css/plugins/toastr/toastr.min.css" rel="stylesheet">
+    <link rel="shortcut icon" href="img/favicon.fw.png">
+    <link rel="stylesheet" href="css/bootstrap-select.css">
+    <link href="css/plugins/clockpicker/clockpicker.css" rel="stylesheet">
+
+
+    <style>
+
+        .wizard > .content > .body  position: relative; }
+
+    </style>
+
+</head>
+
+<body>
+
+    <?php include 'm_menus2.php'; ?>
+
+
+
+        <div>
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="ibox">
+                        <div class="ibox-title">
+                            <h5><img src="img/hgl_logo.fw.png" height="30">Renew Check-In | <strong><?php echo $row['fullname']; ?></strong> | <?php echo $row['uin']; ?></h5>
+                            <div class="ibox-tools">
+                                <a class="collapse-link">
+                                    <i class="fa fa-chevron-up"></i>
+                                </a>
+                                <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                                    <i class="fa fa-wrench"></i>
+                                </a>
+                                <ul class="dropdown-menu dropdown-user">
+                                    <li><a href="#">Config option 1</a>
+                                    </li>
+                                    <li><a href="#">Config option 2</a>
+                                    </li>
+                                </ul>
+                                <a class="close-link">
+                                    <i class="fa fa-times"></i>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="ibox-content">
+
+
+                            <form id="form" method="post" action="<?php echo $_SERVER['PHP_SELF'];?>" enctype="multipart/form-data" class="wizard-big">
+
+
+                            <?php
+include("db_conn.php");
+
+date_default_timezone_set('Africa/Lagos');
+$rand = rand(100,999);
+		$today = date("dmy");
+		$time = date("His");
+		$ID = "L".$today.$time;
+
+	error_reporting(E_ALL);
+	if(isset($_REQUEST['submit'])){
+		$lodge_id=trim(addslashes($_REQUEST['lodge_id']));
+		$oldlodge_id=trim(addslashes($_REQUEST['oldlodge_id']));
+		$uin=trim(addslashes($_REQUEST['uin']));
+		$fullname=trim(addslashes($_REQUEST['fullname']));
+		$phone=trim(addslashes($_REQUEST['phone']));
+		$arrival_date=trim(addslashes($_REQUEST['arrival_date']));
+
+
+		$room=trim(addslashes($_REQUEST['room']));
+		$room_name=trim(addslashes($_REQUEST['room_name']));
+
+
+		$room_price=trim(addslashes($_REQUEST['room_price']));
+		$night=trim(addslashes($_REQUEST['night']));
+		$payment_method=trim(addslashes($_REQUEST['payment_method']));
+		$discount=trim(addslashes($_REQUEST['discount']));
+		$total_amount=trim(addslashes($_REQUEST['total_amount']));
+        $checkout=trim(addslashes($_REQUEST['checkout']));
+
+        $day=date("Y-m-d");
+
+
+        //$sqlroom = "SELECT `room_name` AS NewRoomName FROM `room` WHERE room_id='$room'";
+
+
+        //Check for duplicate record in database before inserting New Record
+$check=mysqli_query($conn, "SELECT * FROM check_in WHERE lodge_id='$lodge_id' ");
+$checkrows=mysqli_num_rows($check);
+
+$check2=mysqli_query($conn, "SELECT * FROM active_check_in WHERE lodge_id='$lodge_id' ");
+$checkrows2=mysqli_num_rows($check2);
+
+if($checkrows > 0 && $checkrows2 > 0) {
+echo "<script>alert('Guest Already or Still Checked-In')
+location.href='super_admin.php'</script>";
+} else {
+
+/*Start Here - SMS API Integration */
+$email = "info@maristonhotels.com";
+$password = "mariston@2022";
+
+$message= "Dear ".$fullname." your check-in renewal request for our ".$room_name." Room was successful with Logde ID: ".$lodge_id.". Thanks!";
+
+$sender_name = "Mariston";
+$recipients = $phone;
+$forcednd = "1";
+$data = array("email" => $email, "password" => $password,"message"=>$message, "sender_name"=>$sender_name,"recipients"=>$recipients,"forcednd"=>$forcednd);
+$data_string = json_encode($data);
+$ch = curl_init('https://api.bulksmslive.com/v2/app/sms'); curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Content-Length: ' . strlen($data_string))); $result = curl_exec($ch); $res_array = json_decode($result);
+//print_r($res_array);
+
+/*Ends Here - SMS API Integration */
+
+    $sql1="INSERT INTO check_in (date, lodge_id, uin, fullname, phone, arrival_date, room, room_name, room_price, night, payment_method, discount, total_amount, checkout, status) VALUES ('$day','$lodge_id','$uin','$fullname','$phone','$arrival_date','$room','$room_name','$room_price','$night','$payment_method','$discount','$total_amount','$checkout','Checked-In')";
+
+    $sql2="INSERT INTO active_check_in (date, lodge_id, uin, fullname, phone, arrival_date, room, room_name, room_price, night, payment_method, discount, total_amount, checkout, status) VALUES ('$day','$lodge_id','$uin','$fullname','$phone','$arrival_date','$room','$room_name','$room_price','$night','$payment_method','$discount','$total_amount','$checkout','Checked-In')";
+
+
+    $sql3="UPDATE `room` SET `lodge_id`='$lodge_id' WHERE room_id=$room";
+
+    $sql4="UPDATE `check_in` SET `status`='Checked-Out' WHERE `lodge_id`='$oldlodge_id'";
+
+    $sql5 = "DELETE FROM `active_check_in` WHERE `lodge_id`='$oldlodge_id'";
+
+
+mysqli_query($conn,$sql1) or die (mysqli_error($conn));
+$num=mysqli_insert_id($conn);
+					if(mysqli_affected_rows($conn)!=1){
+						$message= "Error inserting the application information.";
+						}
+	$result = mysqli_query($conn, $sql2);
+	$result3 = mysqli_query($conn, $sql3);
+	$result4 = mysqli_query($conn, $sql4);
+	$result5 = mysqli_query($conn, $sql5);
+// if successfully update
+if($result && $result3 && $result4 && $result5) {
+
+    echo "<script type='text/javascript'>location.href='receipt2.php?lodge_id=".$lodge_id."';</script>";
+
+        //echo "<script>alert('Guest Checked In Successfully')</script>";
+
+        // echo "<script>alert('Guest Checked In Successfully')
+        // location.href='receipt2.php?lodge_id=".$_REQUEST['lodge_id']."'</script>";
+
+
+	}
+	}
+	}
+}
+	//mysqli_close($conn);
+
+?>
+
+
+                                <fieldset>
+                                    <div class="row">
+                                        <div class="col-lg-12">
+
+                                                <input id="userName" value="<?php echo $ID; ?>" readonly name="lodge_id" type="hidden" placeholder="Lodge ID" class="form-control required">
+
+                                                <input id="name" name="uin" value="<?php echo $row['uin']; ?>" placeholder="UIN" readonly type="hidden" class="form-control required">
+
+
+
+                                                <input  name="oldlodge_id" value="<?php echo $row['lodge_id']; ?>" placeholder="oldlodge_id" readonly type="hidden" class="form-control required">
+
+
+                                                <div class="form-group col-lg-6">
+                                                <label>Fullname *</label>
+                                                <input id="name" name="fullname" value="<?php echo $row['fullname']; ?>" placeholder="Fullname" readonly type="text" class="form-control required">
+                                            </div>
+                                            <div class="form-group col-lg-6">
+                                                <label>Phone *</label>
+                                                <input id="name" name="phone" value="<?php echo $row['phone']; ?>" placeholder="Phone" readonly type="text" class="form-control required">
+                                            </div>
+                                            <div class="form-group col-lg-6">
+                                                <label>Arrival Date & Time *</label>
+                                                <input id="name" name="arrival_date" placeholder="Arrival Date" type="datetime-local" value="<?php echo $row['arrival_date']; ?>" class="form-control" required title="Pick Arrival Date">
+                                            </div>
+
+                                            <div class="form-group col-lg-6">
+                                                <label>Expected Checkout Date & Time *</label>
+                                                <input id="name" name="checkout" value="<?php echo $row['checkout']; ?>"  type="datetime-local" class="form-control" required title="Pick Checkout Date & Time">
+                                            </div>
+
+                                            <div class="form-group col-lg-6">
+                                                <label>Room/Suite *</label>
+                                                <input id="name" name="room_name" value="<?php echo $row['room_name']; ?>" placeholder="Room Name" readonly type="text" step="any"  onkeyup="sum()" class="form-control" id="room_name">
+                                            </div>
+
+
+                                                <input name="room" value="<?php echo $row['room']; ?>" placeholder="room" readonly type="hidden" class="form-control required">
+
+
+                                            <script type="text/javascript">
+
+function sum()
+{
+var room_price = parseInt(document.getElementById("room_price").value);
+var nights = parseInt(document.getElementById("nights").value);
+var discount = parseInt(document.getElementById("discount").value);
+
+
+if(nights.value=="")
+{
+nights.value = 0.00;
+}
+if(room_price.value=="")
+{
+    room_price.value = 0.00;
+}
+if(discount.value=="")
+{
+discount.value = 0.00;
+}
+
+
+
+var sum = (room_price*nights*discount/100).toFixed(2);
+var sum2 = (room_price*nights-sum).toFixed(2);
+
+document.getElementById("total_amount").value=sum2;
+}
+</script>
+
+
+
+
+                                            <div class="form-group col-lg-6">
+                                                <label>Room Price *</label>
+                                                <input name="room_price" value="<?php echo $row['room_price']; ?>" placeholder="Room Price" type="text" step="any"  onkeyup="sum()" class="form-control" id="room_price" readonly>
+                                            </div>
+
+
+
+     <div class="form-group col-lg-6">
+              <label>No of Night(s) *</label>
+              <input type="number" step="any" id="nights" onkeyup="sum()" onchange="sum()" placeholder="Number of Night(s)"  class="form-control" title="night" name="night" required>
+          </div>
+
+    <div class="form-group col-lg-6">
+    <label>Discount in percentage <span style="color: red;">(e.g 2%)</span> *</label>
+        <input type="text" step="any" value="0" name="discount" onkeyup="sum()" class="form-control" id="discount">
+
+    </div>
+
+
+
+
+
+                                            <div class="form-group col-lg-6">
+                                                <label>Mode of Payment *</label>
+                                                <select id="name" name="payment_method" class="form-control" required>
+                                                <option value="">--Select Payment Method--</option>
+                                                <option value="Cash">Cash</option>
+                                                <option value="POS">POS</option>
+                                                <option value="Transfer">Transfer</option>
+                                                <option value="Cheque">Cheque</option>
+                                                <option value="Boss">Boss</option>
+                                                </select>
+                                            </div>
+
+
+                                            <div class="form-group col-lg-6">
+              <label>Amount Payable</label>
+              <input type="text" step="any" placeholder="Total Amount" id="total_amount" readonly class="form-control" title="Total Amount" name="total_amount">
+          </div>
+
+
+          <div class="form-group col-lg-12">
+                                <input type="submit" name="submit" value="Renew Check In" class="btn btn-danger block m-b pull-right" onclick="return confirm('ARE YOU SURE TO RENEW GUEST CHECK-IN?'); ">            </div>
+                                    </div>
+
+
+                                </fieldset>
+
+
+                            </form>
+                        </div>
+                    </div>
+                    </div>
+
+                </div>
+            </div>
+
+       <?php include 'footer.php'; ?>
+
+        </div>
+        </div>
+
+
+
+    <!-- Mainly scripts -->
+    <script src="js/jquery-2.1.1.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/plugins/metisMenu/jquery.metisMenu.js"></script>
+    <script src="js/plugins/slimscroll/jquery.slimscroll.min.js"></script>
+
+    <!-- Custom and plugin javascript -->
+    <script src="js/inspinia.js"></script>
+    <script src="js/plugins/pace/pace.min.js"></script>
+
+    <!-- Clock picker -->
+    <script src="js/plugins/clockpicker/clockpicker.js"></script>
+
+    <!-- Steps -->
+    <script src="js/plugins/staps/jquery.steps.min.js"></script>
+
+    <!-- Jquery Validate -->
+    <script src="js/plugins/validate/jquery.validate.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script type="text/javascript" src="select_room.js"></script>
+<script src="js/bootstrap-select.js"></script>
+
+
+
+
+    <script>
+        $(document).ready(function(){
+            $("#wizard").steps();
+            $("#form").steps({
+                bodyTag: "fieldset",
+                onStepChanging: function (event, currentIndex, newIndex)
+                {
+                    // Always allow going backward even if the current step contains invalid fields!
+                    if (currentIndex > newIndex)
+                    {
+                        return true;
+                    }
+
+                    // Forbid suppressing "Warning" step if the user is to young
+                    if (newIndex === 3 && Number($("#age").val()) < 18)
+                    {
+                        return false;
+                    }
+
+                    var form = $(this);
+
+                    // Clean up if user went backward before
+                    if (currentIndex < newIndex)
+                    {
+                        // To remove error styles
+                        $(".body:eq(" + newIndex + ") label.error", form).remove();
+                        $(".body:eq(" + newIndex + ") .error", form).removeClass("error");
+                    }
+
+                    // Disable validation on fields that are disabled or hidden.
+                    form.validate().settings.ignore = ":disabled,:hidden";
+
+                    // Start validation; Prevent going forward if false
+                    return form.valid();
+                },
+                onStepChanged: function (event, currentIndex, priorIndex)
+                {
+                    // Suppress (skip) "Warning" step if the user is old enough.
+                    if (currentIndex === 2 && Number($("#age").val()) >= 18)
+                    {
+                        $(this).steps("next");
+                    }
+
+                    // Suppress (skip) "Warning" step if the user is old enough and wants to the previous step.
+                    if (currentIndex === 2 && priorIndex === 3)
+                    {
+                        $(this).steps("previous");
+                    }
+                },
+                onFinishing: function (event, currentIndex)
+                {
+                    var form = $(this);
+
+                    // Disable validation on fields that are disabled.
+                    // At this point it's recommended to do an overall check (mean ignoring only disabled fields)
+                    form.validate().settings.ignore = ":disabled";
+
+                    // Start validation; Prevent form submission if false
+                    return form.valid();
+                },
+                onFinished: function (event, currentIndex)
+                {
+                    var form = $(this);
+
+                    // Submit form input
+                    form.submit();
+                }
+            }).validate({
+                        errorPlacement: function (error, element)
+                        {
+                            element.before(error);
+                        },
+                        rules: {
+                            confirm: {
+                                equalTo: "#password"
+                            }
+                        }
+                    });
+       });
+    </script>
+
+ <!-- Toastr -->
+    <script src="js/plugins/toastr/toastr.min.js"></script>
+     <script>
+        $(document).ready(function() {
+            setTimeout(function() {
+                toastr.options = {
+                    closeButton: true,
+                    progressBar: true,
+                    showMethod: 'slideDown',
+                    timeOut: 4000
+                };
+                toastr.success('to Check In', 'Welcome <?php echo $session_fullname ?>');
+
+            }, 1300);
+
+
+            var data1 = [
+                [0,4],[1,8],[2,5],[3,10],[4,4],[5,16],[6,5],[7,11],[8,6],[9,11],[10,30],[11,10],[12,13],[13,4],[14,3],[15,3],[16,6]
+            ];
+            var data2 = [
+                [0,1],[1,0],[2,2],[3,0],[4,1],[5,3],[6,1],[7,5],[8,2],[9,3],[10,2],[11,1],[12,0],[13,2],[14,8],[15,0],[16,0]
+            ];
+            $("#flot-dashboard-chart").length && $.plot($("#flot-dashboard-chart"), [
+                data1, data2
+            ],
+                    {
+                        series: {
+                            lines: {
+                                show: false,
+                                fill: true
+                            },
+                            splines: {
+                                show: true,
+                                tension: 0.4,
+                                lineWidth: 1,
+                                fill: 0.4
+                            },
+                            points: {
+                                radius: 0,
+                                show: true
+                            },
+                            shadowSize: 2
+                        },
+                        grid: {
+                            hoverable: true,
+                            clickable: true,
+                            tickColor: "#d5d5d5",
+                            borderWidth: 1,
+                            color: '#d5d5d5'
+                        },
+                        colors: ["#1ab394", "#1C84C6"],
+                        xaxis:{
+                        },
+                        yaxis: {
+                            ticks: 4
+                        },
+                        tooltip: false
+                    }
+            );
+
+            var doughnutData = [
+                {
+                    value: 300,
+                    color: "#a3e1d4",
+                    highlight: "#1ab394",
+                    label: "App"
+                },
+                {
+                    value: 50,
+                    color: "#dedede",
+                    highlight: "#1ab394",
+                    label: "Software"
+                },
+                {
+                    value: 100,
+                    color: "#A4CEE8",
+                    highlight: "#1ab394",
+                    label: "Laptop"
+                }
+            ];
+
+            var doughnutOptions = {
+                segmentShowStroke: true,
+                segmentStrokeColor: "#fff",
+                segmentStrokeWidth: 2,
+                percentageInnerCutout: 45, // This is 0 for Pie charts
+                animationSteps: 100,
+                animationEasing: "easeOutBounce",
+                animateRotate: true,
+                animateScale: false
+            };
+
+            $('.clockpicker').clockpicker();
+
+            var ctx = document.getElementById("doughnutChart").getContext("2d");
+            var DoughnutChart = new Chart(ctx).Doughnut(doughnutData, doughnutOptions);
+
+            var polarData = [
+                {
+                    value: 300,
+                    color: "#a3e1d4",
+                    highlight: "#1ab394",
+                    label: "App"
+                },
+                {
+                    value: 140,
+                    color: "#dedede",
+                    highlight: "#1ab394",
+                    label: "Software"
+                },
+                {
+                    value: 200,
+                    color: "#A4CEE8",
+                    highlight: "#1ab394",
+                    label: "Laptop"
+                }
+            ];
+
+            var polarOptions = {
+                scaleShowLabelBackdrop: true,
+                scaleBackdropColor: "rgba(255,255,255,0.75)",
+                scaleBeginAtZero: true,
+                scaleBackdropPaddingY: 1,
+                scaleBackdropPaddingX: 1,
+                scaleShowLine: true,
+                segmentShowStroke: true,
+                segmentStrokeColor: "#fff",
+                segmentStrokeWidth: 2,
+                animationSteps: 100,
+                animationEasing: "easeOutBounce",
+                animateRotate: true,
+                animateScale: false
+            };
+            var ctx = document.getElementById("polarChart").getContext("2d");
+            var Polarchart = new Chart(ctx).PolarArea(polarData, polarOptions);
+
+        });
+    </script>
+
+</body>
+
+</html>
